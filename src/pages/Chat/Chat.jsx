@@ -1,63 +1,52 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
+import OpenAI from "openai";
 
-const OPENAI_API = "https://api.openai.com/v1/chat/completions";
+const openai = new OpenAI({
+  dangerouslyAllowBrowser: true,
+  apiKey: import.meta.env.VITE_REACT_APP_OPENAI_API_KEY,
+});
 
 function Chat() {
   const location = useLocation();
   const navigate = useNavigate();
   const formData = location.state?.formData;
   const [message, setMessage] = useState("");
-  const [chatResponse, setChatResponse] = useState();
+  const [chatResponse, setChatResponse] = useState("");
 
   async function formSubmit() {
     setChatResponse("");
 
+    if (!message) {
+      setChatResponse("Please do not leave the field blank.");
+      return;
+    }
+
     try {
-      const response = await fetch(OPENAI_API, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${
-            import.meta.env.VITE_REACT_APP_OPENAI_API_KEY
-          }`,
-        },
-        body: JSON.stringify({
-          messages: [
-            {
-              role: "user",
-              content: message,
-            },
-          ],
-          model: "gpt-3.5-turbo",
-        }),
+      const response = await openai.chat.completions.create({
+        messages: [
+          {
+            role: "system",
+            content: `Answer only if the subject is related to ${formData.subject}.
+                      Use the language of the question.
+                      Include the author's question (${formData.name}) in the response.`,
+          },
+          { role: "user", content: message },
+        ],
+        model: "gpt-3.5-turbo",
       });
-      if (!response.ok) {
-        console.error(response.status);
-      }
-      const data = await response.json();
 
-      if (data) {
-        const chatResponseContent = data.choices[0].message.content;
-
-        const lowerCaseSubject = formData.subject.toLowerCase();
-        const lowerCaseChatResponse = chatResponseContent.toLowerCase();
-
-        const cleanSubject = lowerCaseSubject.replace(/[^\w\s]/g, "");
-        const cleanChatResponse = lowerCaseChatResponse.replace(/[^\w\s]/g, "");
-
-        if (cleanChatResponse.includes(cleanSubject)) {
-          const personalizedResponse = `Bonjour ${formData.name}, ${chatResponseContent}`;
-          setChatResponse(personalizedResponse);
-        } else {
-          setChatResponse(
-            `Désolé ${formData.name}, je ne peux pas répondre à cette question.`
-          );
-        }
+      if (response.choices) {
+        setChatResponse(response.choices[0].message.content);
+      } else {
+        setChatResponse("An unexpected response was received from the server.");
       }
     } catch (error) {
       console.error(error);
+      setChatResponse(
+        "An error occurred while processing your request. Please try again."
+      );
     }
   }
 
