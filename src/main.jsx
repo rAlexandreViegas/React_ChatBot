@@ -1,31 +1,31 @@
 // Imports
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 // Pages components
-import Home from './pages/Home/Home'
-import Chat from './pages/Chat/Chat'
-import NotFound from './pages/Errors/NotFound'
+import Home from "./pages/Home/Home";
+import Chat from "./pages/Chat/Chat";
+import NotFound from "./pages/Errors/NotFound";
 
 // Router & routes
 const router = createBrowserRouter([
   {
-    path: '/',
+    path: "/",
     element: <Home />,
   },
   {
-    path: '/chat',
+    path: "/chat",
     element: <Chat />,
   },
   {
-    path: '*',
+    path: "*",
     element: <NotFound />,
   },
-])
+]);
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <RouterProvider router={router} />
-  </React.StrictMode>,
-)
+  </React.StrictMode>
+);
